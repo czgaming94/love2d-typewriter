@@ -21,6 +21,7 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :setFont
 :setScale
 :setSpeed
+:setText
 ```
 ##### You can use these to modify the state of the typewriter<br>
 ```lua
@@ -36,5 +37,6 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :getFont
 :getScale
 :getSpeed
+:getText
 ```
 Get detailed examples inside of [main.lua](https://github.com/czgaming94/love2d-typewriter/blob/main/main.lua)
