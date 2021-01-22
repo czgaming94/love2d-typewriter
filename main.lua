@@ -35,6 +35,9 @@ function love.update(dt)
 		-- fully stop typewriter. resets text
 		d:stop() 
 		
+		-- change typewriter text. resets text
+		b:setText("boys and girls!")
+		
 		-- reset typewriter, including scale speed and font
 		a:reset(true)
 	end 
