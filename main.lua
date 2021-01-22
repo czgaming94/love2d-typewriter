@@ -25,6 +25,9 @@ function love.load()
 	
 	-- scale your text
 	a:setScale(5,2)
+	
+	-- store position of text
+	local x,y = a:getPos()
 end
 
 function love.update(dt)
@@ -45,6 +48,15 @@ function love.update(dt)
 	if c.runCount == 4 then 
 		-- pause typewriter. keep position
 		a:pause() 
+		
+		-- change just x position
+		a:setX(375)
+		
+		-- change just y position
+		d:setY(300)
+		
+		-- change full position
+		c:setPos(200,200)
 	end
 	
 	if c.runCount == 5 then	
