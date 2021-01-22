@@ -14,7 +14,7 @@ local t = typewriter:new("hello world", .05, 5, 10)
 local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50, true)
 ```
 
-##### You can use these to modify the date of the typewriter<br>
+##### You can use these to modify the data of the typewriter<br>
 ```lua
 :setBackground
 :setColor
