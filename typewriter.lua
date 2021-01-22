@@ -157,8 +157,8 @@ function typewriter:new(text, l, x, y, r)
 	end
 	
 	function t:setText(t)
-		assert(t, "FAILURE: typewriter:setScale() :: missing param[t]")
-		assert(type(t) == "text", "FAILURE: typewriter:setScale() :: incorrect param[t] - text expected, but " .. type(t) .. " supplied.")
+		assert(t, "FAILURE: typewriter:setText() :: missing param[t]")
+		assert(type(t) == "string", "FAILURE: typewriter:setText() :: incorrect param[t] - string expected, but " .. type(t) .. " supplied.")
 		self.oText = t
 		self.text = typewriter:split(t)
 		self:reset()
