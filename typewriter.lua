@@ -95,6 +95,7 @@ function typewriter:new(text, l, x, y, r)
 		if self.scale[1] ~= 1 or self.scale[2] ~= 1 then 
 			lg.pop()
 		end
+		lg.setColor(1,1,1,1)
 	end
 	
 	function t:setSpeed(s)
@@ -151,6 +152,10 @@ function typewriter:new(text, l, x, y, r)
 		assert(y, "FAILURE: typewriter:setScale() :: missing param[y]")
 		assert(type(y) == "number", "FAILURE: typewriter:setScale() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
 		self.scale = {x,y}
+	end
+	
+	function t:getScale()
+		return self.scale
 	end
 	
 	function t:stop()
