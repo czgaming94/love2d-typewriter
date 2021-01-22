@@ -67,18 +67,19 @@ function typewriter:new(text, l, x, y, r)
 			lg.scale(unpack(self.scale))
 		end
 		if self.background[1] then
-			lg.setColor(self.background[2])
-			if self.background[5] then
-				lg.rectangle(self.background[1], self.x - (self.background[3] / 2), self.x - (self.background[4] / 2), self.font:getWidth(self.oText) + self.background[3], self.font:getHeight(self.oText) + self.background[4], 5, 5)
+			local fill, color, xPad, yPad, round, wrap = unpack(self.background)
+			lg.setColor(color)
+			if round then
+				lg.rectangle(fill, self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad, 5, 5)
 			else
-				lg.rectangle(self.background[1], self.x - (self.background[3] / 2), self.x - (self.background[4] / 2), self.font:getWidth(self.oText) + self.background[3], self.font:getHeight(self.oText) + self.background[4])
+				lg.rectangle(fill, self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad)
 			end
-			if self.background[6] then
-				lg.setColor(self.background[6])
-				if self.background[5] then
-					lg.rectangle("line", self.x - (self.background[3] / 2), self.x - (self.background[4] / 2), self.font:getWidth(self.oText) + self.background[3], self.font:getHeight(self.oText) + self.background[4], 5, 5)
+			if wrap then
+				lg.setColor(wrap)
+				if round then
+					lg.rectangle("line", self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad, 5, 5)
 				else
-					lg.rectangle("line", self.x - (self.background[3] / 2), self.x - (self.background[4] / 2), self.font:getWidth(self.oText) + self.background[3], self.font:getHeight(self.oText) + self.background[4])
+					lg.rectangle("line", self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad)
 				end
 			end
 		end
