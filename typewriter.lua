@@ -37,7 +37,9 @@ function typewriter:new(text, l, x, y, r)
 	t.oTime = l
 	t.curPrint = 1
 	t.toShow = ""
+	t.oX = x
 	t.x = x
+	t.oY = y
 	t.y = y
 	t.id = #self.typewriters + 1
 	t.finished = false
@@ -144,6 +146,18 @@ function typewriter:new(text, l, x, y, r)
 		return self.background
 	end
 	
+	function t:setPos(x,y)
+		assert(x, "FAILURE: typewriter:setPos() :: missing param[x]")
+		assert(type(x) == "number", "FAILURE: typewriter:setPos() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
+		assert(y, "FAILURE: typewriter:setPos() :: missing param[y]")
+		assert(type(y) == "number", "FAILURE: typewriter:setPos() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
+		self.x, self.y = x, y
+	end
+	
+	function t:getPos()
+		return self.x, self.y
+	end
+	
 	function t:setScale(x,y)
 		assert(x, "FAILURE: typewriter:setScale() :: missing param[x]")
 		assert(type(x) == "number", "FAILURE: typewriter:setScale() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
@@ -166,6 +180,26 @@ function typewriter:new(text, l, x, y, r)
 	
 	function t:getText()
 		return self.oText
+	end
+	
+	function t:setX(x)
+		assert(x, "FAILURE: typewriter:setX() :: missing param[x]")
+		assert(type(x) == "number", "FAILURE: typewriter:setX() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
+		self.x = x
+	end
+	
+	function t:getX()
+		return self.x
+	end
+	
+	function t:setY(y)
+		assert(y, "FAILURE: typewriter:setY() :: missing param[y]")
+		assert(type(y) == "number", "FAILURE: typewriter:setY() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
+		self.y = y
+	end
+	
+	function t:getY()
+		return self.y
 	end
 	
 	function t:stop()
@@ -207,6 +241,8 @@ function typewriter:new(text, l, x, y, r)
 			self.scale = {1,1}
 			self.timeToWait = self.oTime
 			if self.oFont then self.font = t.oFont end
+			self.x = self.oX
+			self.y = self.oY
 		end
 	end
 	
