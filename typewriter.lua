@@ -82,16 +82,13 @@ function typewriter:new(text, l, x, y, r)
 				end
 			end
 		end
-		if self.color and self.font then
-			lg.print({self.color, self.toShow}, self.font, self.x, self.y)
-		elseif self.color and not self.font then
-			if t.id == 2 then print(self.color) end
-			lg.print({self.color, self.toShow}, self.x, self.y)
-		elseif not self.color and self.font then
-			lg.print(self.toShow, self.font, self.x, self.y)
-		else
-			lg.print(self.toShow, self.x, self.y) 
-		end
+		
+		--[[ Thanks, FlamingArrow ]]
+		local c = self.color or {lg.getColor()}
+		local f = self.font or lg.getFont()
+		lg.print({c, self.toShow}, f, self.x, self.y)
+		--[[ end Thanks ]]
+		
 		if self.scale[1] ~= 1 or self.scale[2] ~= 1 then 
 			lg.pop()
 		end
