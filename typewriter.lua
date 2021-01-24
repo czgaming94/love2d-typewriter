@@ -21,6 +21,7 @@ typewriter.colors = {
 }
 
 typewriter.fonts = {}
+typewriter.backgrounds = {}
 
 -- text, time between each letter, x, y, repeat, z index
 function typewriter:new(text, l, x, y, z, r)
@@ -103,18 +104,10 @@ function typewriter:new(text, l, x, y, z, r)
 		lg.pop()
 	end
 	
-	function t:setBackground(fill, color, round, xPad, yPad, wrap)
-		typewriter:errorCheck("setBackground", "fill")
-		typewriter:errorCheck("setBackground", "fill", "string", fill)
-		typewriter:errorCheck("setBackground", "color")
-		typewriter:errorCheck("setBackground", "color", "table", color)
-		if round then typewriter:errorCheck("setBackground", "round", "boolean", round) end
-		if xPad then typewriter:errorCheck("setBackground", "xPad", "number", xPad) end
-		if yPad then typewriter:errorCheck("setBackground", "yPad", "number", yPad) end
-		if wrap then typewriter:errorCheck("setBackground", "wrap", "table", wrap) end
-		
-		xPad, yPad = xPad or 0, yPad or 0
-		self.background = {fill, color, xPad, yPad, round, wrap}
+	function t:setBackground(b)
+		typewriter:errorCheck("setBackground", "background")
+		typewriter:errorCheck("setBackground", "background", "string", b)
+		self.background = typewriter.backgrouns[b]
 	end
 	
 	function t:getBackground()
@@ -347,10 +340,37 @@ function typewriter:clean(t)
 	end
 end
 
-function typewriter:color(c)
-	self:errorCheck("addColor", "color")
-	self:errorCheck("addColor", "color", "string", c)
-	return self.colors[c]
+function typewriter:addBackground(b, n)
+	self:errorCheck("addBackground", "background")
+	self:errorCheck("addBackground", "background", "table", b)
+	self:errorCheck("addBackground", "name")
+	self:errorCheck("addBackground", "name", "string", b)
+	
+	local fill, color, xPad, yPad, round, wrap = unpack(b)
+	
+	typewriter:errorCheck("addBackground", "background[fill]")
+	typewriter:errorCheck("addBackground", "background[fill]", "string", fill)
+	typewriter:errorCheck("addBackground", "background[color]")
+	typewriter:errorCheck("addBackground", "background[color]", "table", color)
+	if round then typewriter:errorCheck("addBackground", "background[round]", "boolean", round) end
+	if xPad then typewriter:errorCheck("addBackground", "background[xPad]", "number", xPad) end
+	if yPad then typewriter:errorCheck("addBackground", "background[yPad]", "number", yPad) end
+	if wrap then typewriter:errorCheck("addBackground", "background[wrap]", "table", wrap) end
+	
+	xPad, yPad = xPad or 0, yPad or 0
+	self.backgrounds[n] = b
+end
+
+function typewriter:getBackground(b)
+	self:errorCheck("getBackground", "background")
+	self:errorCheck("getBackground", "background", "string", b)
+	return self.backgrounds[b]
+end
+
+function typewriter:removeBackground(b)
+	self:errorCheck("removeBackground", "background"
+	self:errorCheck("removeBackground", "background", "string", b)
+	self.backgrounds[b] = nil
 end
 
 function typewriter:addColor(c, n)
@@ -361,16 +381,16 @@ function typewriter:addColor(c, n)
 	self.colors[n] = c
 end
 
+function typewriter:getColor(c)
+	self:errorCheck("addColor", "color")
+	self:errorCheck("addColor", "color", "string", c)
+	return self.colors[c]
+end
+
 function typewriter:removeColor(c)
 	self:errorCheck("removeColor", "color"
 	self:errorCheck("removeColor", "color", "string", c)
 	self.colors[c] = nil
-end
-
-function typewriter:font(f)
-	self:errorCheck("addFont", "font")
-	self:errorCheck("addFont", "font", "string", f)
-	return self.fonts[f]
 end
 
 function typewriter:addFont(f, n)
@@ -379,6 +399,12 @@ function typewriter:addFont(f, n)
 	self:errorCheck("addFont", "name")
 	self:errorCheck("addFont", "name", "string", n)
 	self.fonts[n] = f
+end
+
+function typewriter:getFont(f)
+	self:errorCheck("addFont", "font")
+	self:errorCheck("addFont", "font", "string", f)
+	return self.fonts[f]
 end
 
 function typewriter:removeFont(f)
