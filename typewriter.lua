@@ -100,14 +100,14 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setBackground(fill, color, round, xPad, yPad, wrap)
-		assert(fill, "FAILURE: typewriter:setBackground() :: missing param[fill]")
-		assert(type(fill) == "string", "FAILURE: typewriter:setBackground() :: incorrect param[fill] - string expected, but " .. type(fill) .. " supplied.")
-		assert(color, "FAILURE: typewriter:setBackground() :: missing param[color]")
-		assert(type(color) == "table", "FAILURE: typewriter:setBackground() :: incorrect param[color] - table expected, but " .. type(color) .. " supplied.")
-		if round then assert(type(round) == "boolean", "FAILURE: typewriter:setBackground() :: incorrect param[round] - boolean expected, but " .. type(round) .. " supplied.") end
-		if xPad then assert(type(xPad) == "number", "FAILURE: typewriter:setBackground() :: incorrect param[round] - number expected, but " .. type(xPad) .. " supplied.") end
-		if yPad then assert(type(yPad) == "number", "FAILURE: typewriter:setBackground() :: incorrect param[round] - number expected, but " .. type(yPad) .. " supplied.") end
-		if wrap then assert(type(wrap) == "table", "FAILURE: typewriter:setBackground() :: incorrect param[wrap] - table expected, but " .. type(wrap) .. " supplied.") end
+		typewriter:errorCheck("setBackground", "fill")
+		typewriter:errorCheck("setBackground", "fill", "string", fill)
+		typewriter:errorCheck("setBackground", "color")
+		typewriter:errorCheck("setBackground", "color", "table", color)
+		if round then typewriter:errorCheck("setBackground", "round", "boolean", round) end
+		if xPad then typewriter:errorCheck("setBackground", "xPad", "number", xPad) end
+		if yPad then typewriter:errorCheck("setBackground", "yPad", "number", yPad) end
+		if wrap then typewriter:errorCheck("setBackground", "wrap", "table", wrap) end
 		
 		xPad, yPad = xPad or 0, yPad or 0
 		self.background = {fill, color, xPad, yPad, round, wrap}
@@ -118,8 +118,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setColor(c)
-		assert(c, "FAILURE: typewriter:setColor() :: missing param[color]")
-		assert(type(c) == "table", "FAILURE: typewriter:setColor() :: incorrect param[color] - table expected, but " .. type(c) .. " supplied.")
+		typewriter:errorCheck("setColor", "c")
+		typewriter:errorCheck("setColor", "c", "table", c)
 		self.color = c
 	end
 	
@@ -128,8 +128,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setFont(f)
-		assert(f, "FAILURE: typewriter:setFont() :: missing param[font]")
-		assert(type(f) == "userdata", "FAILURE: typewriter:setFont() :: incorrect param[font] - LOVE2D Font expected, but " .. type(f) .. " supplied.")
+		typewriter:errorCheck("setFont", "f")
+		typewriter:errorCheck("setFont", "f", "userdata", f)
 		self.font = f
 	end
 	
@@ -138,11 +138,11 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setPos(x,y,z)
-		assert(x, "FAILURE: typewriter:setPos() :: missing param[x]")
-		assert(type(x) == "number", "FAILURE: typewriter:setPos() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
-		assert(y, "FAILURE: typewriter:setPos() :: missing param[y]")
-		assert(type(y) == "number", "FAILURE: typewriter:setPos() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
-		if z then assert(type(z) == "number", "FAILURE: typewriter:setPos() :: incorrect param[z] - number expected, but " .. type(z) .. " supplied.") end
+		typewriter:errorCheck("setPos", "x")
+		typewriter:errorCheck("setPos", "x", "number", x)
+		typewriter:errorCheck("setPos", "y")
+		typewriter:errorCheck("setPos", "y", "number", y)
+		if z then typewriter:errorCheck("setPos", "z", "number", z) end
 		self.x, self.y, self.z = x, y, z or self.z 
 	end
 	
@@ -150,11 +150,21 @@ function typewriter:new(text, l, x, y, r, z)
 		return self.x, self.y, self.z
 	end
 	
+	function t:setRepeat(r)
+		typewriter:errorCheck("setRepeat", "r")
+		typewriter:errorCheck("setRepeat", "r", "boolean", r)
+		self.rep = r
+	end
+	
+	function t:getRepeat()
+		return self.rep
+	end
+	
 	function t:setScale(x,y)
-		assert(x, "FAILURE: typewriter:setScale() :: missing param[x]")
-		assert(type(x) == "number", "FAILURE: typewriter:setScale() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
-		assert(y, "FAILURE: typewriter:setScale() :: missing param[y]")
-		assert(type(y) == "number", "FAILURE: typewriter:setScale() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
+		typewriter:errorCheck("setScale", "x")
+		typewriter:errorCheck("setScale", "x", "number", x)
+		typewriter:errorCheck("setScale", "y")
+		typewriter:errorCheck("setScale", "y", "number", y)
 		self.scale = {x,y}
 	end
 	
@@ -163,8 +173,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setSpeed(s)
-		assert(s, "FAILURE: typewriter:setSpeed() :: missing param[speed]")
-		assert(type(s) == "number", "FAILURE: typewriter:setSpeed() :: incorrect param[speed] - number expected, but " .. type(s) .. " supplied.")
+		typewriter:errorCheck("setSpeed", "speed")
+		typewriter:errorCheck("setSpeed", "speed", "number", s)
 		self.timeToWait = tonumber(s)
 	end
 	
@@ -173,8 +183,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setText(t)
-		assert(t, "FAILURE: typewriter:setText() :: missing param[text]")
-		assert(type(t) == "string", "FAILURE: typewriter:setText() :: incorrect param[text] - string expected, but " .. type(t) .. " supplied.")
+		typewriter:errorCheck("setText", "text")
+		typewriter:errorCheck("setText", "text", "string", t)
 		self.oText = t
 		self.text = typewriter:split(t)
 		self:reset()
@@ -185,8 +195,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setX(x)
-		assert(x, "FAILURE: typewriter:setX() :: missing param[x]")
-		assert(type(x) == "number", "FAILURE: typewriter:setX() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
+		typewriter:errorCheck("setX", "x")
+		typewriter:errorCheck("setX", "x", "number", x)
 		self.x = x
 	end
 	
@@ -195,8 +205,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setY(y)
-		assert(y, "FAILURE: typewriter:setY() :: missing param[y]")
-		assert(type(y) == "number", "FAILURE: typewriter:setY() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
+		typewriter:errorCheck("setY", "y")
+		typewriter:errorCheck("setY", "y", "number", y)
 		self.y = y
 	end
 	
@@ -205,8 +215,8 @@ function typewriter:new(text, l, x, y, r, z)
 	end
 	
 	function t:setZ(z)
-		assert(z, "FAILURE: typewriter:setY() :: missing param[z]")
-		assert(type(z) == "number", "FAILURE: typewriter:setY() :: incorrect param[z] - number expected, but " .. type(z) .. " supplied.")
+		typewriter:errorCheck("setZ", "z")
+		typewriter:errorCheck("setZ", "z", "number", z)
 		self.z = z
 		typewriter:sort()
 	end
@@ -309,6 +319,14 @@ function typewriter:split(str)
 		t[#t+1] = s
 	end
 	return t
+end
+
+function typewriter:errorCheck(f, p, t, v)
+	if t then
+		assert(type(v) == t, "FAILURE: typewriter:" .. f .. "() :: incorrect param[" .. p .. "] - " .. t .. " expected, but " .. type(v) .. " supplied.")
+	else
+		assert(p, "FAILURE: typewriter:" .. f .. "() :: missing param[" .. p .. "]")
+	end
 end
 
 function typewriter:update(dt)
