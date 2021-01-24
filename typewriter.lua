@@ -9,8 +9,21 @@ local lg = love.graphics
 local typewriter = {}
 typewriter.typewriters = {}
 
+typewriter.colors = { 
+	red = {1,0,0,1},
+	yellow = {1,1,0,1},
+	green = 0,1,0,1},
+	cyan = {0,1,1,1},
+	blue = {0,0,1,1},
+	purple = {1,0,1,1},
+	white = {1,1,1,1},
+	black = {0,0,0,0},
+}
+
+typewriter.fonts = {}
+
 -- text, time between each letter, x, y, repeat, z index
-function typewriter:new(text, l, x, y, r, z)
+function typewriter:new(text, l, x, y, z, r)
 	typewriter:errorCheck("new", "text")
 	typewriter:errorCheck("new", "text", {"string", "table"}, text)
 	typewriter:errorCheck("new", "length")
@@ -22,20 +35,11 @@ function typewriter:new(text, l, x, y, r, z)
 	if r then typewriter:errorCheck("new", "repeat", "boolean", r) end
 	if z then typewriter:errorCheck("new", "z", "number", z) end
 	
-	local t = {}
-	if type(text) == "table" then
-		if text[2] then
-			typewriter:errorCheck("new", "text[color]", "table", text[2])
-			while type(text[2][1]) == "table" do text[2] = text[2][1] end
-		end
-		text, t.color, t.font = unpack(text)
-		t.oFont = t.font
-	end
 	t.text = self:split(text)
 	t.oText = text
-	t.color = t.color or {lg.getColor()}
+	t.color = {lg.getColor()}
 	t.oColor = t.color
-	t.font = t.font or lg.getFont()
+	t.font = lg.getFont()
 	t.oFont = t.font
 	t.timeWaited = 0
 	t.timeToWait = l
@@ -119,8 +123,8 @@ function typewriter:new(text, l, x, y, r, z)
 	
 	function t:setColor(c)
 		typewriter:errorCheck("setColor", "c")
-		typewriter:errorCheck("setColor", "c", "table", c)
-		self.color = c
+		typewriter:errorCheck("setColor", "c", "string", c)
+		self.color = typewriter.colors[c]
 	end
 	
 	function t:getColor()
@@ -129,8 +133,8 @@ function typewriter:new(text, l, x, y, r, z)
 	
 	function t:setFont(f)
 		typewriter:errorCheck("setFont", "f")
-		typewriter:errorCheck("setFont", "f", "userdata", f)
-		self.font = f
+		typewriter:errorCheck("setFont", "f", "string", f)
+		self.font = typewriter.fonts[f]
 	end
 	
 	function t:getFont()
@@ -317,7 +321,70 @@ function typewriter:split(str)
 	for s in string.gmatch(str, ".") do
 		t[#t+1] = s
 	end
-	return t
+	return self:clean(t)
+end
+
+function typewriter:clean(t)
+	local lastChar = ""
+	local toPrint = {}
+	local step = 1
+	for k,v in ipairs(t) do
+		if lastChar == "/" then
+			if v == "c" then
+				k,v = next(t)
+				v = typewriter.colors[v]
+				step = k
+			end
+			if v == f then
+				k,v = next(t)
+				v = typewriter.fonts[v]
+				step = k
+			end
+		end
+		toPrint[#toPrint + 1] = v
+		step = k + 1
+		lastChar = v
+	end
+end
+
+function typewriter:color(c)
+	self:errorCheck("addColor", "color")
+	self:errorCheck("addColor", "color", "string", c)
+	return self.colors[c]
+end
+
+function typewriter:addColor(c, n)
+	self:errorCheck("addColor", "color")
+	self:errorCheck("addColor", "color", "table", c)
+	self:errorCheck("addColor", "name")
+	self:errorCheck("addColor", "name", "string", n)
+	self.colors[n] = c
+end
+
+function typewriter:removeColor(c)
+	self:errorCheck("removeColor", "color"
+	self:errorCheck("removeColor", "color", "string", c)
+	self.colors[c] = nil
+end
+
+function typewriter:font(f)
+	self:errorCheck("addFont", "font")
+	self:errorCheck("addFont", "font", "string", f)
+	return self.fonts[f]
+end
+
+function typewriter:addFont(f, n)
+	self:errorCheck("addFont", "font")
+	self:errorCheck("addFont", "font", "userdata", f)
+	self:errorCheck("addFont", "name")
+	self:errorCheck("addFont", "name", "string", n)
+	self.fonts[n] = f
+end
+
+function typewriter:removeFont(f)
+	self:errorCheck("removeFont", "font")
+	self:errorCheck("removeFont", "font", "string", f)
+	self.fonts[f] = nil
 end
 
 function typewriter:errorCheck(f, p, t, v)
