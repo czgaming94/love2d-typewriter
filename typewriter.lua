@@ -11,21 +11,21 @@ typewriter.typewriters = {}
 
 -- text, time between each letter, x, y, repeat, z index
 function typewriter:new(text, l, x, y, r, z)
-	assert(text, "FAILURE: typewriter:new() :: missing parameter [text]")
-	assert(type(text) == "string" or type(text) == "table", "FAILURE: typewriter:new() :: incorrect param[text]  - text or text table expected, but " .. type(text) .. " supplied.")
-	assert(l, "FAILURE: typewriter:new() :: missing parameter [length]")
-	assert(type(l) == "number", "FAILURE: typewriter:new() :: incorrect param[length] - number expected, but " .. type(l) .. " supplied.")
-	assert(x, "FAILURE: typewriter:new() :: missing parameter [x]")
-	assert(type(x) == "number", "FAILURE: typewriter:new() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
-	assert(y, "FAILURE: typewriter:new() :: missing parameter [y]")
-	assert(type(y) == "number", "FAILURE: typewriter:new() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
-	if r then assert(type(r) == "boolean", "FAILURE: typewriter:new() :: incorrect param[repeat] - boolean expected, but " .. type(r) .. " supplied.") end
-	if z then assert(type(z) == "number", "FAILURE: typewriter:new() :: incorrect param[z-index] - number expected, but " .. type(z) .. " supplied.") end
+	typewriter:errorCheck("new", "text")
+	typewriter:errorCheck("new", "text", {"string", "table"}, text)
+	typewriter:errorCheck("new", "length")
+	typewriter:errorCheck("new", "length", "number", l)
+	typewriter:errorCheck("new", "x")
+	typewriter:errorCheck("new", "x", "number", x)
+	typewriter:errorCheck("new", "y")
+	typewriter:errorCheck("new", "y", "number", y)
+	if r then typewriter:errorCheck("new", "repeat", "boolean", r) end
+	if z then typewriter:errorCheck("new", "z", "number", z) end
 	
 	local t = {}
 	if type(text) == "table" then
 		if text[2] then
-			assert(type(text[2]) == "table", "FAILURE: typewriter:new() :: incorrect param[text[color]] - table expected, but " .. type(text[2]) .. " supplied.")
+			typewriter:errorCheck("new", "text[color]", "table", text[2])
 			while type(text[2][1]) == "table" do text[2] = text[2][1] end
 		end
 		text, t.color, t.font = unpack(text)
@@ -322,6 +322,18 @@ end
 
 function typewriter:errorCheck(f, p, t, v)
 	if t then
+		if type(t) == "table" then
+			local failed = false
+			for _,i in ipairs(t) do 
+				if i == type(v) then
+					failed = false
+					t = i
+					break
+				else
+					failed = true
+				end
+			end
+		end
 		assert(type(v) == t, "FAILURE: typewriter:" .. f .. "() :: incorrect param[" .. p .. "] - " .. t .. " expected, but " .. type(v) .. " supplied.")
 	else
 		assert(p, "FAILURE: typewriter:" .. f .. "() :: missing param[" .. p .. "]")
