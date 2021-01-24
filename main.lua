@@ -4,7 +4,7 @@ local myFont = love.graphics.newFont("pixelated.ttf")
 local myFont2 = love.graphics.newFont("thicktext.ttf")
 
 local a = typewriter:new("hello", 0.5, 5, 10, 3, false)
-local b = typewriter:new("world", colors.color, 0.5, 40, 10)
+local b = typewriter:new("world", 0.5, 40, 10)
 local c = typewriter:new("This is my text...",, 0.05, 5, 50, true)
 local d = typewriter:new("Let's get it started", 0.01, 100, 100, 1, false)
 local e = typewriter:new("In heeeeeere!", 0.015, 5, 10, 1, false)
