@@ -22,6 +22,7 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :setColor
 :setFont
 :setPos
+:setRepeat
 :setScale
 :setSpeed
 :setText
@@ -44,6 +45,7 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :getColor
 :getFont
 :getPos
+:getRepeat
 :getScale
 :getSpeed
 :getText
@@ -54,6 +56,5 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :isPlaying
 :isPaused
 :isStopped
-
 ```
 Get detailed examples inside of [main.lua](https://github.com/czgaming94/love2d-typewriter/blob/main/main.lua)
