@@ -218,7 +218,6 @@ function typewriter:new(text, l, x, y, r, z)
 		typewriter:errorCheck("setZ", "z")
 		typewriter:errorCheck("setZ", "z", "number", z)
 		self.z = z
-		typewriter:sort()
 	end
 	
 	function t:getZ()
