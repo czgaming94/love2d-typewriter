@@ -97,14 +97,22 @@ function typewriter:new(text, l, x, y, r, z)
 		lg.pop()
 	end
 	
-	function t:setSpeed(s)
-		assert(s, "FAILURE: typewriter:setSpeed() :: missing param[speed]")
-		assert(type(s) == "number", "FAILURE: typewriter:setSpeed() :: incorrect param[speed] - number expected, but " .. type(s) .. " supplied.")
-		self.timeToWait = tonumber(s)
+	function t:setBackground(fill, color, round, xPad, yPad, wrap)
+		assert(fill, "FAILURE: typewriter:setBackground() :: missing param[fill]")
+		assert(type(fill) == "string", "FAILURE: typewriter:setBackground() :: incorrect param[fill] - string expected, but " .. type(fill) .. " supplied.")
+		assert(color, "FAILURE: typewriter:setBackground() :: missing param[color]")
+		assert(type(color) == "table", "FAILURE: typewriter:setBackground() :: incorrect param[color] - table expected, but " .. type(color) .. " supplied.")
+		if round then assert(type(round) == "boolean", "FAILURE: typewriter:setBackground() :: incorrect param[round] - boolean expected, but " .. type(round) .. " supplied.") end
+		if xPad then assert(type(xPad) == "number", "FAILURE: typewriter:setBackground() :: incorrect param[round] - number expected, but " .. type(xPad) .. " supplied.") end
+		if yPad then assert(type(yPad) == "number", "FAILURE: typewriter:setBackground() :: incorrect param[round] - number expected, but " .. type(yPad) .. " supplied.") end
+		if wrap then assert(type(wrap) == "table", "FAILURE: typewriter:setBackground() :: incorrect param[wrap] - table expected, but " .. type(wrap) .. " supplied.") end
+		
+		xPad, yPad = xPad or 0, yPad or 0
+		self.background = {fill, color, xPad, yPad, round, wrap}
 	end
 	
-	function t:getSpeed()
-		return self.timeToWait
+	function t:getBackground()
+		return self.background
 	end
 	
 	function t:setColor(c)
@@ -125,24 +133,6 @@ function typewriter:new(text, l, x, y, r, z)
 	
 	function t:getFont()
 		return self.font
-	end
-	
-	function t:setBackground(fill, color, round, xPad, yPad, wrap)
-		assert(fill, "FAILURE: typewriter:setBackground() :: missing param[fill]")
-		assert(type(fill) == "string", "FAILURE: typewriter:setBackground() :: incorrect param[fill] - string expected, but " .. type(fill) .. " supplied.")
-		assert(color, "FAILURE: typewriter:setBackground() :: missing param[color]")
-		assert(type(color) == "table", "FAILURE: typewriter:setBackground() :: incorrect param[color] - table expected, but " .. type(color) .. " supplied.")
-		if round then assert(type(round) == "boolean", "FAILURE: typewriter:setBackground() :: incorrect param[round] - boolean expected, but " .. type(round) .. " supplied.") end
-		if xPad then assert(type(xPad) == "number", "FAILURE: typewriter:setBackground() :: incorrect param[round] - number expected, but " .. type(xPad) .. " supplied.") end
-		if yPad then assert(type(yPad) == "number", "FAILURE: typewriter:setBackground() :: incorrect param[round] - number expected, but " .. type(yPad) .. " supplied.") end
-		if wrap then assert(type(wrap) == "table", "FAILURE: typewriter:setBackground() :: incorrect param[wrap] - table expected, but " .. type(wrap) .. " supplied.") end
-		
-		xPad, yPad = xPad or 0, yPad or 0
-		self.background = {fill, color, xPad, yPad, round, wrap}
-	end
-	
-	function t:getBackground()
-		return self.background
 	end
 	
 	function t:setPos(x,y,z)
@@ -168,6 +158,16 @@ function typewriter:new(text, l, x, y, r, z)
 	
 	function t:getScale()
 		return self.scale
+	end
+	
+	function t:setSpeed(s)
+		assert(s, "FAILURE: typewriter:setSpeed() :: missing param[speed]")
+		assert(type(s) == "number", "FAILURE: typewriter:setSpeed() :: incorrect param[speed] - number expected, but " .. type(s) .. " supplied.")
+		self.timeToWait = tonumber(s)
+	end
+	
+	function t:getSpeed()
+		return self.timeToWait
 	end
 	
 	function t:setText(t)
@@ -206,7 +206,7 @@ function typewriter:new(text, l, x, y, r, z)
 		assert(z, "FAILURE: typewriter:setY() :: missing param[z]")
 		assert(type(z) == "number", "FAILURE: typewriter:setY() :: incorrect param[z] - number expected, but " .. type(z) .. " supplied.")
 		self.z = z
-		--typewriter:sort()
+		typewriter:sort()
 	end
 	
 	function t:getZ()
