@@ -9,8 +9,8 @@ local lg = love.graphics
 local typewriter = {}
 typewriter.typewriters = {}
 
--- text, time between each letter, x, y, repeat
-function typewriter:new(text, l, x, y, r)
+-- text, time between each letter, x, y, repeat, z index
+function typewriter:new(text, l, x, y, r, z)
 	assert(text, "FAILURE: typewriter:new() :: missing parameter [text]")
 	assert(type(text) == "string" or type(text) == "table", "FAILURE: typewriter:new() :: incorrect param[text]  - text or text table expected, but " .. type(text) .. " supplied.")
 	assert(l, "FAILURE: typewriter:new() :: missing parameter [length]")
@@ -20,6 +20,7 @@ function typewriter:new(text, l, x, y, r)
 	assert(y, "FAILURE: typewriter:new() :: missing parameter [y]")
 	assert(type(y) == "number", "FAILURE: typewriter:new() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
 	if r then assert(type(r) == "boolean", "FAILURE: typewriter:new() :: incorrect param[repeat] - boolean expected, but " .. type(r) .. " supplied.") end
+	if z then assert(type(z) == "number", "FAILURE: typewriter:new() :: incorrect param[z-index] - number expected, but " .. type(z) .. " supplied.") end
 	
 	local t = {}
 	if type(text) == "table" then
@@ -32,6 +33,8 @@ function typewriter:new(text, l, x, y, r)
 	end
 	t.text = self:split(text)
 	t.oText = text
+	t.color = t.color or {lg.getColor()}
+	t.font = t.font or lg.getFont()
 	t.timeWaited = 0
 	t.timeToWait = l
 	t.oTime = l
@@ -41,12 +44,15 @@ function typewriter:new(text, l, x, y, r)
 	t.x = x
 	t.oY = y
 	t.y = y
+	t.oZ = z or 0
+	t.z = z or 0
 	t.id = #self.typewriters + 1
 	t.finished = false
 	t.runCount = 0
 	t.show = true
 	t.rep = r or false
-	t.isStopped = false
+	t.stopped = false
+	t.paused = false
 	t.background = {}
 	t.scale = {1,1}
 	
@@ -64,10 +70,9 @@ function typewriter:new(text, l, x, y, r)
 	end
 	
 	function t:draw()
-		if self.scale[1] ~= 1 or self.scale[2] ~= 1 then 
-			lg.push()
-			lg.scale(unpack(self.scale))
-		end
+		lg.push()
+		lg.scale(unpack(self.scale))
+		
 		if self.background[1] then
 			local fill, color, xPad, yPad, round, wrap = unpack(self.background)
 			lg.setColor(color)
@@ -86,16 +91,10 @@ function typewriter:new(text, l, x, y, r)
 			end
 		end
 		
-		--[[ Thanks, FlamingArrow ]]
-		local c = self.color or {lg.getColor()}
-		local f = self.font or lg.getFont()
-		lg.print({c, self.toShow}, f, self.x, self.y)
-		--[[ end Thanks ]]
+		lg.print({self.color, self.toShow}, self.font, self.x, self.y)
 		
-		if self.scale[1] ~= 1 or self.scale[2] ~= 1 then 
-			lg.pop()
-		end
 		lg.setColor(1,1,1,1)
+		lg.pop()
 	end
 	
 	function t:setSpeed(s)
@@ -146,16 +145,17 @@ function typewriter:new(text, l, x, y, r)
 		return self.background
 	end
 	
-	function t:setPos(x,y)
+	function t:setPos(x,y,z)
 		assert(x, "FAILURE: typewriter:setPos() :: missing param[x]")
 		assert(type(x) == "number", "FAILURE: typewriter:setPos() :: incorrect param[x] - number expected, but " .. type(x) .. " supplied.")
 		assert(y, "FAILURE: typewriter:setPos() :: missing param[y]")
 		assert(type(y) == "number", "FAILURE: typewriter:setPos() :: incorrect param[y] - number expected, but " .. type(y) .. " supplied.")
-		self.x, self.y = x, y
+		if z then assert(type(z) == "number", "FAILURE: typewriter:setPos() :: incorrect param[z] - number expected, but " .. type(z) .. " supplied.") end
+		self.x, self.y, self.z = x, y, z or self.z 
 	end
 	
 	function t:getPos()
-		return self.x, self.y
+		return self.x, self.y, self.z
 	end
 	
 	function t:setScale(x,y)
@@ -171,8 +171,8 @@ function typewriter:new(text, l, x, y, r)
 	end
 	
 	function t:setText(t)
-		assert(t, "FAILURE: typewriter:setText() :: missing param[t]")
-		assert(type(t) == "string", "FAILURE: typewriter:setText() :: incorrect param[t] - string expected, but " .. type(t) .. " supplied.")
+		assert(t, "FAILURE: typewriter:setText() :: missing param[text]")
+		assert(type(t) == "string", "FAILURE: typewriter:setText() :: incorrect param[text] - string expected, but " .. type(t) .. " supplied.")
 		self.oText = t
 		self.text = typewriter:split(t)
 		self:reset()
@@ -202,10 +202,15 @@ function typewriter:new(text, l, x, y, r)
 		return self.y
 	end
 	
-	function t:stop()
-		self.curPrint = 1
-		self.toShow = ""
-		self.isStopped = true
+	function t:setZ(z)
+		assert(z, "FAILURE: typewriter:setY() :: missing param[z]")
+		assert(type(z) == "number", "FAILURE: typewriter:setY() :: incorrect param[z] - number expected, but " .. type(z) .. " supplied.")
+		self.z = z
+		--typewriter:sort()
+	end
+	
+	function t:getZ()
+		return self.z
 	end
 	
 	function t:play()
@@ -214,11 +219,30 @@ function typewriter:new(text, l, x, y, r)
 			self.toShow = ""
 		end
 		self.finished = false
-		self.isStopped = false
+		self.paused = false
+		self.stopped = false
+	end
+	
+	function t:isPlaying()
+		return (self:isPaused() or self:isStopped()) and false or true
 	end
 	
 	function t:pause()
-		self.finished = true
+		self.paused = true
+	end
+	
+	function t:isPaused()
+		return self.isPaused
+	end
+	
+	function t:stop()
+		self.curPrint = 1
+		self.toShow = ""
+		self.stopped = true
+	end
+	
+	function t:isStopped()
+		return self.isStopped
 	end
 
 	function t:toggle(r)
@@ -236,18 +260,24 @@ function typewriter:new(text, l, x, y, r)
 		self.curPrint = 1
 		self.toShow = ""
 		self.finished = false
-		self.isStopped = false
+		self.stopped = false
+		self.paused = false
 		if full then
 			self.scale = {1,1}
 			self.timeToWait = self.oTime
 			if self.oFont then self.font = t.oFont end
 			self.x = self.oX
 			self.y = self.oY
+			self.z = self.oZ
 		end
 	end
 	
 	self.typewriters[t.id] = self:create(t)
-	return self.typewriters[t.id]
+	return self.typewriters[t.id], self:sort()
+end
+
+function typewriter:sort()
+	table.sort(self.typewriters, function(a,b) return a.z > b.z end)
 end
 
 function typewriter:create(item)
@@ -279,11 +309,11 @@ function typewriter:split(str)
 end
 
 function typewriter:update(dt)
-	for _,t in ipairs(self.typewriters) do if t.show and not t.isStopped then t:update(dt) end end
+	for _,t in ipairs(self.typewriters) do if t.show and t:isPlaying() then t:update(dt) end end
 end
 
 function typewriter:draw()
-	for _,t in ipairs(self.typewriters) do if t.show and not t.isStopped then t:draw() end end
+	for _,t in ipairs(self.typewriters) do if t.show and t:isPlaying() then t:draw() end end
 end
 
 return typewriter
