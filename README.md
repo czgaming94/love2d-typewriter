@@ -9,6 +9,7 @@ This is a simple yet effective typewriter API for LOVE2D text display.
   x
   y
   repeat
+  z index
 --]]
 local t = typewriter:new("hello world", .05, 5, 10)
 local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50, true)
@@ -19,9 +20,13 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :setBackground
 :setColor
 :setFont
+:setPos
 :setScale
 :setSpeed
 :setText
+:setX
+:setY
+:setZ
 ```
 ##### You can use these to modify the state of the typewriter<br>
 ```lua
@@ -29,14 +34,25 @@ local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50,
 :pause
 :reset
 :stop
+:toggle
+:remove
 ```
 ##### You can use these to get information from the typewriter<br>
 ```lua
 :getBackground
 :getColor
 :getFont
+:getPos
 :getScale
 :getSpeed
 :getText
+:getX
+:getY
+:getZ
+
+:isPlaying
+:isPaused
+:isStopped
+
 ```
 Get detailed examples inside of [main.lua](https://github.com/czgaming94/love2d-typewriter/blob/main/main.lua)
