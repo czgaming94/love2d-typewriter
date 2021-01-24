@@ -12,8 +12,8 @@ Simulates oldschool typewriter text display, by creating timed printing of suppl
   repeat
   z index
 --]]
-local t = typewriter:new("hello world", .05, 5, 10)
-local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50, true)
+local t = typewriter:new("hello world", .05, 5, 10,1)
+local t2 = typewriter:new({"This is my text...", {1,0,1,1}, myFont}, .05, 5, 50, true,2)
 ```
 
 ##### You can use these to modify the data of the typewriter<br>
