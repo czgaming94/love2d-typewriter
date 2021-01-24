@@ -1,5 +1,6 @@
 # __LOVE2D Typewriter__
-This is a simple yet effective typewriter API for LOVE2D text display.
+This is a simple yet effective typewriter API for LOVE2D text display.<br>
+Simulates oldschool typewriter text display, by creating timed printing of supplied text over supplied time.
 
 ### Examples
 ```lua 
