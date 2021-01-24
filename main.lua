@@ -17,7 +17,7 @@ function love.load()
 	typewriter:addFont(myFont2, "myFont2")
 	
 	-- load a color into the typewriter module
-	typewriter:addColor({.2,1,.4,1},"special")
+	typewriter:addColor({.2,1,.4,1},"mySpecialColor")
 	
 	-- change font of typewriter
 	if b:getFont() ~= typewriter:font("myFont") then b:setFont("myFont") end
@@ -25,7 +25,7 @@ function love.load()
 	-- change repeat of typewriter
 	b:setRepeat(true)
 	
-	local dSettings = {
+	local greenWrap = {
 		"fill",			-- fill / line
 		{0,0.4,0.3,0.5},	-- color
 		true,			-- round corners
@@ -34,8 +34,11 @@ function love.load()
 		{0,1,0.3,1}		-- wrap with line
 	}
 	
+	-- load a background into the typewriter module
+	typewriter:addBackground(greenWrap, "greenWrap")
+	
 	-- set box background behind typewriter
-	d:setBackground(unpack(dSettings))
+	d:setBackground("greenWrap")
 	
 	-- scale your typewriter
 	a:setScale(5,2)
@@ -87,7 +90,7 @@ function love.update(dt)
 		d:reset()
 		
 		-- unload color from typewriter module
-		typewriter:removeColor("special")
+		typewriter:removeColor("mySpecialColor")
 	end
 	
 	if c.runCount == 6 then 
