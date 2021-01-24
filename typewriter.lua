@@ -34,7 +34,9 @@ function typewriter:new(text, l, x, y, r, z)
 	t.text = self:split(text)
 	t.oText = text
 	t.color = t.color or {lg.getColor()}
+	t.oColor = t.color
 	t.font = t.font or lg.getFont()
+	t.oFont = t.font
 	t.timeWaited = 0
 	t.timeToWait = l
 	t.oTime = l
@@ -264,8 +266,9 @@ function typewriter:new(text, l, x, y, r, z)
 		self.paused = false
 		if full then
 			self.scale = {1,1}
+			self.color = t.oColor
+			self.font = t.oFont
 			self.timeToWait = self.oTime
-			if self.oFont then self.font = t.oFont end
 			self.x = self.oX
 			self.y = self.oY
 			self.z = self.oZ
