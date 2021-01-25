@@ -36,7 +36,7 @@ function typewriter:new(text, l, x, y, z, r)
 	if r then typewriter:errorCheck("new", "repeat", "boolean", r) end
 	if z then typewriter:errorCheck("new", "z", "number", z) end
 	
-	t.text = self:split(text)
+	t.text = self:markdown(text)
 	t.oText = text
 	t.color = {lg.getColor()}
 	t.oColor = t.color
@@ -309,35 +309,42 @@ function typewriter:create(item)
     return copy
 end
 
-function typewriter:split(str)
+function typewriter:split(str, delim)
 	local t={}
-	for s in string.gmatch(str, ".") do
+	delim = delim or "."
+	for s in string.gmatch(str, delim) do
 		t[#t+1] = s
 	end
-	return self:clean(t)
+	return t
 end
 
-function typewriter:clean(t)
-	local lastChar = ""
-	local toPrint = {}
-	local step = 1
-	for k,v in ipairs(t) do
-		if lastChar == "/" then
-			if v == "c" then
-				k,v = next(t)
-				v = typewriter.colors[v]
-				step = k
-			end
-			if v == f then
-				k,v = next(t)
-				v = typewriter.fonts[v]
-				step = k
-			end
+function typewriter:markdown(t)
+	local textSegments = nil
+	if string.find(t, "{") and string.find(t, "}") then textSegments = self:split(t, "%w.-{.-{/}") end
+	local printText = {}
+	if textSegments then
+		local types = {c = "color", f = "font"}
+		local isWaitBlock = false
+		for k,text in ipairs(textSegments) do
+			-- Hello {c red}World!{/}
+			local rText = ""
+			printText[#printText + 1] = self:split(string.sub(text, string.find(text, "^.-{")):gsub("{", "")) -- {H,e,l,l,o}
+			text = text:gsub("^.-{", "")
+			local delim = string.sub(text, string.find(text, "^.-}")):gsub("}", "")
+			delim = self:split(delim, "%s")
+			printText[#printText + 1] = {
+				[types[delim[1]]] = { -- c
+					delim[2], -- red
+					self:split(text:gsub("^.-}",""):gsub("{/}","")) -- {W,o,r,l,d,!}
+				}
+			}
 		end
-		toPrint[#toPrint + 1] = v
-		step = k + 1
-		lastChar = v
+		printText[#printText + 1] = 0 -- reset data
+	else
+		printText = {t}
 	end
+	
+	return printText
 end
 
 function typewriter:addBackground(b, n)
