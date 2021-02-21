@@ -1,451 +1,493 @@
---[[
-	Requires LOVE2D -- https://love2d.org/
-	Written By: David Ashton | CognizanceGaming | CZGaming94
-	Free for use in any project. No compensation is required. 
-	It is only requested you leave this publication tag.
---]]
+local lg, lt = love.graphics, love.timer
+local min, max = math.min, math.max
+local text = {}
 
-local lg = love.graphics
-local typewriter = {}
-typewriter.typewriters = {}
-
-typewriter.colors = { 
-	red = {1,0,0,1},
-	yellow = {1,1,0,1},
-	green = 0,1,0,1},
-	cyan = {0,1,1,1},
-	blue = {0,0,1,1},
-	purple = {1,0,1,1},
-	white = {1,1,1,1},
-	black = {0,0,0,0},
+local prefixes = {
+	color = "c",
+	delay = "d",
+	font = "f",
+	time = "t"
 }
 
-typewriter.fonts = {}
-typewriter.backgrounds = {}
+text.items = {}
+text.guis = {}
 
--- text, time between each letter, x, y, repeat, z index
-function typewriter:new(text, l, x, y, z, r)
-	typewriter:errorCheck("new", "text")
-	typewriter:errorCheck("new", "text", {"string", "table"}, text)
-	typewriter:errorCheck("new", "length")
-	typewriter:errorCheck("new", "length", "number", l)
-	typewriter:errorCheck("new", "x")
-	typewriter:errorCheck("new", "x", "number", x)
-	typewriter:errorCheck("new", "y")
-	typewriter:errorCheck("new", "y", "number", y)
-	if r then typewriter:errorCheck("new", "repeat", "boolean", r) end
-	if z then typewriter:errorCheck("new", "z", "number", z) end
+function text:new(n, p)
+	local t = {}
+	if p and p.id and not self.guis[p.id] then self.guis[p.id] = p end
 	
-	t.text = self:markdown(text)
-	t.oText = text
-	t.color = {lg.getColor()}
-	t.oColor = t.color
-	t.font = lg.getFont()
-	t.oFont = t.font
-	t.timeWaited = 0
-	t.timeToWait = l
-	t.oTime = l
-	t.curPrint = 1
-	t.toShow = ""
-	t.oX = x
-	t.x = x
-	t.oY = y
-	t.y = y
-	t.oZ = z or 0
-	t.z = z or 0
-	t.id = #self.typewriters + 1
-	t.finished = false
-	t.runCount = 0
-	t.show = true
-	t.rep = r or false
-	t.stopped = false
-	t.paused = false
-	t.background = {}
-	t.scale = {1,1}
+	t.name = n
+	t.id = #self.items + 1
+	if p and p.id then t.parent = p.id else t.parent = nil end
+	t.text = ""
+	t.w = 0
+	t.h = 0
+	t.pos = {
+		x = 0,
+		y = 0,
+		z = 0
+	}
+	t.timerEvent = nil
+	t.color = {1,1,1,1}
+	t.font = love.graphics.getFont()
+	t.fonts = {}
+	t.hovered = false
+	t.clicked = false
+	t.clickable = true
+	t.faded = false
+	t.fancy = false
+	t.typewriter = false
+	t.typewriterPrint = ""
+	t.typewriterText = self:split(t.text)
+	t.typewriterPos = 1
+	t.typewriterSpeed = 0
+	t.typewriterWaited = 0
+	t.typewriterFinished = false
+	t.typewriterPaused = false
+	t.typewriterStopped = false
+	t.typewriterRunCount = 0
+	t.inAnimation = false
+	t.animateColor = false
+	t.colorToAnimateTo = {1,1,1,1}
+	t.colorAnimateSpeed = 0
+	t.colorAnimateTime = lt.getTime()
+	t.animatePosition = false
+	t.positionAnimateSpeed = 0
+	t.positionToAnimateTo = {x = 0, y = 0}
+	t.positionToAnimateFrom = {x = 0, y = 0}
+	t.positionAnimateTime = lt.getTime()
+	t.animateOpacity = false
+	t.opacityAnimateSpeed = 0
+	t.opacityToAnimateTo = 0
+	t.opacityAnimateTime = lt.getTime()
 	
-	function t:update(dt)
-		self.timeWaited = self.timeWaited + dt
-		while self.timeWaited >= self.timeToWait and self.curPrint <= #self.text do
-			self.timeWaited = self.timeWaited - self.timeToWait
-			self.toShow = self.toShow .. self.text[self.curPrint]
-			self.curPrint = self.curPrint + 1
-		end
-		if self.curPrint >= #self.text and not self.finished then
-			if not self.rep then self.finished = true else self:reset() end
-			self.runCount = self.runCount + 1
-		end
+	function t:animateToColor(c, s)
+		assert(c, "FAILURE: text:animateToColor() :: Missing param[color]")
+		assert(type(c) == "table", "FAILURE: text:animateToColor() :: Incorrect param[color] - expecting table and got " .. type(c))
+		assert(#c == 4, "FAILURE: text:animateToColor() :: Incorrect param[color] - table length 4 expected and got " .. #c)
+		s = s or 2
+		assert(s, "FAILURE: text:animateToColor() :: Missing param[speed]")
+		assert(type(s) == "number", "FAILURE: text:animateToColor() :: Incorrect param[speed] - expecting number and got " .. type(s))
+		self.colorToAnimateTo = c
+		self.colorAnimateSpeed = s
+		self.colorAnimateTime = lt.getTime()
+		self.inAnimation = true
+		self.animateColor = true
+	end
+	
+	function t:animateToPosition(x, y, s)
+		assert(x, "FAILURE: text:animateToPosition() :: Missing param[x]")
+		assert(type(x) == "number", "FAILURE: text:animateToPosition() :: Incorrect param[x] - expecting number and got " .. type(x))
+		assert(y, "FAILURE: text:animateToPosition() :: Missing param[y]")
+		assert(type(y) == "number", "FAILURE: text:animateToPosition() :: Incorrect param[y] - expecting number and got " .. type(y))
+		s = s or 2
+		assert(type(s) == "number", "FAILURE: text:animateToPosition() :: Incorrect param[speed] - expecting number and got " .. type(s))
+		for k,v in pairs(self.pos) do self.positionToAnimateFrom[k] = v end
+		self.positionToAnimateTo = {x = x, y = y}
+		self.positionAnimateDrag = s
+		self.positionAnimateTime = lt.getTime()
+		self.inAnimation = true
+		self.animatePosition = true
+	end
+	
+	function t:animateToOpacity(o, s)
+		assert(o, "FAILURE: text:animateToOpacity() :: Missing param[o]")
+		assert(type(o) == "number", "FAILURE: text:animateToOpacity() :: Incorrect param[o] - expecting number and got " .. type(o))
+		s = s or 1
+		assert(s, "FAILURE: text:animateToOpacity() :: Missing param[speed]")
+		assert(type(s) == "number", "FAILURE: text:animateToOpacity() :: Incorrect param[speed] - expecting number and got " .. type(s))
+		self.opacityToAnimateTo = o
+		self.opacityAnimateTime = lt.getTime()
+		self.opacityAnimateSpeed = s
+		self.inAnimation = true
+		self.animateOpacity = true
+	end
+	
+	function t:isAnimating()
+		return self.inAnimation
+	end
+	
+	function t:setClickable(c)
+		assert(c ~= nil, "FAILURE: text:setClickable() :: Missing param[clickable]")
+		assert(type(c) == "boolean", "FAILURE: text:setClickable() :: Incorrect param[clickable] - expecting boolean and got " .. type(c))
+		self.clickable = c
+	end
+	
+	function t:isClickable()
+		return self.clickable
+	end
+	
+	function t:setColor(c)
+		assert(c, "FAILURE: text:setColor() :: Missing param[color]")
+		assert(type(c) == "table", "FAILURE: text:setColor() :: Incorrect param[color] - expecting table and got " .. type(c))
+		assert(#c == 4, "FAILURE: text:setColor() :: Incorrect param[color] - table length 4 expected and got " .. #c)
+		self.color = c
+	end
+	
+	function t:setData(d)
+		assert(d, "FAILURE: text:setData() :: Missing param[data]")
+		assert(type(d) == "table", "FAILURE: text:setData() :: Incorrect param[data] - expecting table and got " .. type(d))
+		assert(d.t or d.text, "FAILURE: text:setData() :: Missing param[data['text']")
+		assert(type(d.text) == "string", "FAILURE: text:setData() :: Incorrect param[text] - expecting string and got " .. type(d.text))
+		assert(d.x, "FAILURE: text:setData() :: Missing param[data['x']")
+		assert(type(d.x) == "number", "FAILURE: text:setData() :: Incorrect param[x] - expecting number and got " .. type(d.x))
+		assert(d.y, "FAILURE: text:setData() :: Missing param[data['y']")
+		assert(type(d.y) == "number", "FAILURE: text:setData() :: Incorrect param[y] - expecting number and got " .. type(d.y))
+		self.w = d.w or d.width or self.w
+		self.h = d.h or d.height or self.h
+		self.text = d.t or d.text or self.text
+		self.typewriterText, self.fancy = text:split(self.text)
+		self.typewriter = d.tw and d.tw or d.typewriter and d.typewriter or self.typewriter
+		self.pos.x = d.x or self.pos.x
+		self.pos.y = d.y or self.pos.y
+		self.pos.z = d.z or self.pos.z
+		self.color = d.color or self.color
+		self.font = d.font or self.font
+		self.clickable = d.clickable and d.clickable or self.clickable
+	end
+	
+	function t:disable()
+		self.hidden = true
 	end
 	
 	function t:draw()
 		lg.push()
-		lg.scale(unpack(self.scale))
+		lg.setColor(self.color)
+		lg.setFont(self.font)
 		
-		if self.background[1] then
-			local fill, color, xPad, yPad, round, wrap = unpack(self.background)
-			lg.setColor(color)
-			if round then
-				lg.rectangle(fill, self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad, 5, 5)
-			else
-				lg.rectangle(fill, self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad)
-			end
-			if wrap then
-				lg.setColor(wrap)
-				if round then
-					lg.rectangle("line", self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad, 5, 5)
-				else
-					lg.rectangle("line", self.x - (xPad / 2), self.y - (yPad / 2), self.font:getWidth(self.oText) + xPad, self.font:getHeight(self.oText) + yPad)
+		if self.typewriter then
+			if self.fancy then
+				for k,v in ipairs(self.typewriterText) do
+					if v.text then
+						lg.push()
+						
+						if v.color ~= "white" then
+							lg.setColor(text.guis[self.parent].color(v.color))
+						end
+						if v.font ~= "default" then
+							lg.setColor(v.font)
+						end
+						
+						if not v.y then
+							v.y = self.pos.y
+						end
+						
+						if not v.x then
+							if k == 1 then
+								v.x = self.pos.x
+							else
+								v.x = self.typewriterText[k - 1].x + lg.getFont():getWidth(v.fullText)
+								
+								if self.width > 0 and v.x > self.pos.x + (self.width - lg.getFont():getWidth(v.fullText)) then
+									v.x = self.pos.x
+									v.y = self.typewriterText[k - 1].y + lg.getFont():getHeight(v.fullText) 
+								end
+							end
+						end
+						
+						lg.print(v.toShow, v.x, v.y)
+						lg.setColor(1,1,1,1)
+						lg.pop()
+						if not v.finished then break end
+					end
 				end
+			else
+				lg.print(self.typewriterPrint, self.pos.x, self.pos.y)
 			end
+		else
+			lg.print(self.text, self.pos.x, self.pos.y)
 		end
-		
-		lg.print({self.color, self.toShow}, self.font, self.x, self.y)
 		
 		lg.setColor(1,1,1,1)
 		lg.pop()
 	end
 	
-	function t:setBackground(b)
-		typewriter:errorCheck("setBackground", "background")
-		typewriter:errorCheck("setBackground", "background", "string", b)
-		self.background = typewriter.backgrouns[b]
+	function t:enable()
+		self.hidden = false
 	end
 	
-	function t:getBackground()
-		return self.background
+	function t:fadeIn()
+		self:animateToOpacity(1)
+		self.hidden = false
+		self.faded = false
+		if self.onFadeIn then self:onFadeIn() end
 	end
 	
-	function t:setColor(c)
-		typewriter:errorCheck("setColor", "c")
-		typewriter:errorCheck("setColor", "c", "string", c)
-		self.color = typewriter.colors[c]
+	function t:fadeOut(p)
+		if p then self.faded = true end
+		self:animateToOpacity(0)
+		if self.onFadeOut then self:onFadeOut() end
 	end
 	
-	function t:getColor()
-		return self.color
+	function t:addFont(f, n)
+		assert(f, "FAILURE: text:addFont() :: Missing param[font]")
+		assert(type(f) == "userdata", "FAILURE: text:addFont() :: Incorrect param[font] - expecting font userdata and got " .. type(f))
+		assert(n, "FAILURE: text:addFont() :: Missing param[name]")
+		assert(type(n) == "string", "FAILURE: text:addFont() :: Incorrect param[name] - expecting string and got " .. type(n))
+		self.fonts[n] = f
 	end
 	
-	function t:setFont(f)
-		typewriter:errorCheck("setFont", "f")
-		typewriter:errorCheck("setFont", "f", "string", f)
-		self.font = typewriter.fonts[f]
+	function t:setFont(n)
+		assert(n, "FAILURE: text:setFont() :: Missing param[name]")
+		assert(type(n) == "string", "FAILURE: text:setFont() :: Incorrect param[name] - expecting string and got " .. type(n))
+		self.font = self.fonts[n]
 	end
 	
-	function t:getFont()
-		return self.font
+	function t:isHovered()
+		return self.hovered
 	end
 	
-	function t:setPos(x,y,z)
-		typewriter:errorCheck("setPos", "x")
-		typewriter:errorCheck("setPos", "x", "number", x)
-		typewriter:errorCheck("setPos", "y")
-		typewriter:errorCheck("setPos", "y", "number", y)
-		if z then typewriter:errorCheck("setPos", "z", "number", z) end
-		self.x, self.y, self.z = x, y, z or self.z 
+	function t:startAnimation()
+		self.inAnimation = true
 	end
 	
-	function t:getPos()
-		return self.x, self.y, self.z
+	function t:stopAnimation()
+		self.inAnimation = false
 	end
 	
-	function t:setRepeat(r)
-		typewriter:errorCheck("setRepeat", "r")
-		typewriter:errorCheck("setRepeat", "r", "boolean", r)
-		self.rep = r
-	end
-	
-	function t:getRepeat()
-		return self.rep
-	end
-	
-	function t:setScale(x,y)
-		typewriter:errorCheck("setScale", "x")
-		typewriter:errorCheck("setScale", "x", "number", x)
-		typewriter:errorCheck("setScale", "y")
-		typewriter:errorCheck("setScale", "y", "number", y)
-		self.scale = {x,y}
-	end
-	
-	function t:getScale()
-		return self.scale
-	end
-	
-	function t:setSpeed(s)
-		typewriter:errorCheck("setSpeed", "speed")
-		typewriter:errorCheck("setSpeed", "speed", "number", s)
-		self.timeToWait = tonumber(s)
-	end
-	
-	function t:getSpeed()
-		return self.timeToWait
-	end
-	
-	function t:setText(t)
-		typewriter:errorCheck("setText", "text")
-		typewriter:errorCheck("setText", "text", "string", t)
-		self.oText = t
-		self.text = typewriter:split(t)
-		self:reset()
-	end
-	
-	function t:getText()
-		return self.oText
-	end
-	
-	function t:setX(x)
-		typewriter:errorCheck("setX", "x")
-		typewriter:errorCheck("setX", "x", "number", x)
-		self.x = x
-	end
-	
-	function t:getX()
-		return self.x
-	end
-	
-	function t:setY(y)
-		typewriter:errorCheck("setY", "y")
-		typewriter:errorCheck("setY", "y", "number", y)
-		self.y = y
-	end
-	
-	function t:getY()
-		return self.y
-	end
-	
-	function t:setZ(z)
-		typewriter:errorCheck("setZ", "z")
-		typewriter:errorCheck("setZ", "z", "number", z)
-		self.z = z
-	end
-	
-	function t:getZ()
-		return self.z
-	end
-	
-	function t:play()
-		if self.curPrint >= #self.toShow then
-			self.curPrint = 1
-			self.toShow = ""
+	function t:update(dt)
+		local x,y = love.mouse.getPosition()
+		if (x >= self.pos.x and x <= self.pos.x + self.w) and (y >= self.pos.y and y <= self.pos.y + self.h) then
+			if not self.hovered then
+				if self.onHoverEnter then self:onHoverEnter() end
+				self.hovered = true 
+			end
+		else
+			if self.hovered then 
+				if self.onHoverExit then self:onHoverExit() end
+				self.hovered = false 
+			end
 		end
-		self.finished = false
-		self.paused = false
-		self.stopped = false
-	end
-	
-	function t:isPlaying()
-		return (self:isPaused() or self:isStopped()) and false or true
-	end
-	
-	function t:pause()
-		self.paused = true
-	end
-	
-	function t:isPaused()
-		return self.isPaused
-	end
-	
-	function t:stop()
-		self.curPrint = 1
-		self.toShow = ""
-		self.stopped = true
-	end
-	
-	function t:isStopped()
-		return self.isStopped
-	end
-
-	function t:toggle(r)
-		self.show = not self.show
-		if r then self:reset() end
-	end
-	
-	function t:remove()
-		typewriter.typewriters[self.id] = {}
-		self = {}
-	end
-	
-	function t:reset(full)
-		self.timeWaited = 0
-		self.curPrint = 1
-		self.toShow = ""
-		self.finished = false
-		self.stopped = false
-		self.paused = false
-		if full then
-			self.scale = {1,1}
-			self.color = t.oColor
-			self.font = t.oFont
-			self.timeToWait = self.oTime
-			self.x = self.oX
-			self.y = self.oY
-			self.z = self.oZ
-		end
-	end
-	
-	self.typewriters[t.id] = self:create(t)
-	return self.typewriters[t.id], self:sort()
-end
-
-function typewriter:sort()
-	table.sort(self.typewriters, function(a,b) return a.z > b.z end)
-end
-
-function typewriter:create(item)
-	local copies = {}
-    local copy
-    if type(item) == 'table' then
-        if copies[item] then
-            copy = copies[item]
-        else
-            copy = {}
-            copies[item] = copy
-            for orig_key, orig_value in next, item, nil do
-                copy[self:create(orig_key, copies)] = self:create(orig_value, copies)
-            end
-            setmetatable(copy, self:create(getmetatable(item), copies))
-        end
-    else
-        copy = item
-    end
-    return copy
-end
-
-function typewriter:split(str, delim)
-	local t={}
-	delim = delim or "."
-	for s in string.gmatch(str, delim) do
-		t[#t+1] = s
-	end
-	return t
-end
-
-function typewriter:markdown(t)
-	local textSegments = nil
-	if string.find(t, "{") and string.find(t, "}") then textSegments = self:split(t, "%w.-{.-{/}") end
-	local printText = {}
-	if textSegments then
-		local types = {c = "color", f = "font"}
-		local isWaitBlock = false
-		for k,text in ipairs(textSegments) do
-			-- Hello {c red}World!{/}
-			local rText = ""
-			printText[#printText + 1] = self:split(string.sub(text, string.find(text, "^.-{")):gsub("{", "")) -- {H,e,l,l,o}
-			text = text:gsub("^.-{", "")
-			local delim = string.sub(text, string.find(text, "^.-}")):gsub("}", "")
-			delim = self:split(delim, "%s")
-			printText[#printText + 1] = {
-				[types[delim[1]]] = { -- c
-					delim[2], -- red
-					self:split(text:gsub("^.-}",""):gsub("{/}","")) -- {W,o,r,l,d,!}
-				}
-			}
-		end
-		printText[#printText + 1] = 0 -- reset data
-	else
-		printText = {t}
-	end
-	
-	return printText
-end
-
-function typewriter:addBackground(b, n)
-	self:errorCheck("addBackground", "background")
-	self:errorCheck("addBackground", "background", "table", b)
-	self:errorCheck("addBackground", "name")
-	self:errorCheck("addBackground", "name", "string", b)
-	
-	local fill, color, xPad, yPad, round, wrap = unpack(b)
-	
-	typewriter:errorCheck("addBackground", "background[fill]")
-	typewriter:errorCheck("addBackground", "background[fill]", "string", fill)
-	typewriter:errorCheck("addBackground", "background[color]")
-	typewriter:errorCheck("addBackground", "background[color]", "table", color)
-	if round then typewriter:errorCheck("addBackground", "background[round]", "boolean", round) end
-	if xPad then typewriter:errorCheck("addBackground", "background[xPad]", "number", xPad) end
-	if yPad then typewriter:errorCheck("addBackground", "background[yPad]", "number", yPad) end
-	if wrap then typewriter:errorCheck("addBackground", "background[wrap]", "table", wrap) end
-	
-	xPad, yPad = xPad or 0, yPad or 0
-	self.backgrounds[n] = b
-end
-
-function typewriter:getBackground(b)
-	self:errorCheck("getBackground", "background")
-	self:errorCheck("getBackground", "background", "string", b)
-	return self.backgrounds[b]
-end
-
-function typewriter:removeBackground(b)
-	self:errorCheck("removeBackground", "background"
-	self:errorCheck("removeBackground", "background", "string", b)
-	self.backgrounds[b] = nil
-end
-
-function typewriter:addColor(c, n)
-	self:errorCheck("addColor", "color")
-	self:errorCheck("addColor", "color", "table", c)
-	self:errorCheck("addColor", "name")
-	self:errorCheck("addColor", "name", "string", n)
-	self.colors[n] = c
-end
-
-function typewriter:getColor(c)
-	self:errorCheck("addColor", "color")
-	self:errorCheck("addColor", "color", "string", c)
-	return self.colors[c]
-end
-
-function typewriter:removeColor(c)
-	self:errorCheck("removeColor", "color"
-	self:errorCheck("removeColor", "color", "string", c)
-	self.colors[c] = nil
-end
-
-function typewriter:addFont(f, n)
-	self:errorCheck("addFont", "font")
-	self:errorCheck("addFont", "font", "userdata", f)
-	self:errorCheck("addFont", "name")
-	self:errorCheck("addFont", "name", "string", n)
-	self.fonts[n] = f
-end
-
-function typewriter:getFont(f)
-	self:errorCheck("addFont", "font")
-	self:errorCheck("addFont", "font", "string", f)
-	return self.fonts[f]
-end
-
-function typewriter:removeFont(f)
-	self:errorCheck("removeFont", "font")
-	self:errorCheck("removeFont", "font", "string", f)
-	self.fonts[f] = nil
-end
-
-function typewriter:errorCheck(f, p, t, v)
-	if t then
-		if type(t) == "table" then
-			local failed = false
-			for _,i in ipairs(t) do 
-				if i == type(v) then
-					failed = false
-					t = i
-					break
-				else
-					failed = true
+		
+		if self.typewriter then
+			self.typewriterWaited = self.typewriterWaited + dt
+			if self.fancy then
+				for k,v in ipairs(self.typewriterText) do
+					if v.text then
+						if v.delay > 0 and not delayWaited >= v.delay then
+							delayWaited = delayWaited + dt
+						end
+						if not v.needToWait then
+							if not v.started then
+								v.started = true
+							end
+							while v.timeWaited >= v.time and v.textPos <= #v.text do
+								v.timeWaited = v.timeWaited - v.time
+								v.toShow = v.toShow .. v.text[v.textPos]
+								v.textPos = v.textPos = 1
+							end
+							if v.textPos >= #v.text then
+								v.finished = true
+							end
+						end
+					end
+					if not v.finished then break end
+				end
+			else
+				while self.typewriterWaited >= self.typewriterSpeed and self.typewriterPrint <= #self.typewriterText do
+					self.typewriterWaited = self.typewriterWaited - self.typewriterSpeed
+					self.typewriterPrint = self.typewriterPrint .. self.typewriterText[self.typewriterPos]
+					self.typewriterPos = self.typewriterPos + 1
+				end
+				if self.typewriterPos >= #self.typewriterText and not self.typewriterFinished then
+					if not self.typewriterRepeat then self.typewriterFinished = true else self:typewriterCycle() end
+					self.typewriterRunCount = self.typewriterRunCount + 1
 				end
 			end
 		end
-		assert(type(v) == t, "FAILURE: typewriter:" .. f .. "() :: incorrect param[" .. p .. "] - " .. t .. " expected, but " .. type(v) .. " supplied.")
-	else
-		assert(p, "FAILURE: typewriter:" .. f .. "() :: missing param[" .. p .. "]")
+		
+		if self.inAnimation then
+			local allColorsMatch = true
+			local allBorderColorsMatch = true
+			local inProperPosition = true
+			local atProperOpacity = true
+			
+			if self.animateColor then
+				for k,v in ipairs(self.colorToAnimateTo) do
+					if self.color[k] ~= v then
+						if v > self.color[k] then
+							self.color[k] = min(v, self.color[k] + (self.colorAnimateSpeed * dt))
+						else
+							self.color[k] = max(v, self.color[k] - (self.colorAnimateSpeed * dt))
+						end
+						allColorsMatch = false
+					end
+				end
+			end
+			
+			if self.animatePosition then
+				local t = math.min((lt.getTime() - self.positionAnimateTime) * (self.positionAnimateSpeed / 2), 1.0)
+				if self.pos.x ~= self.positionToAnimateTo.x or self.pos.y ~= self.positionToAnimateTo.y then
+					self.pos.x = self.lerp(self.positionToAnimateFrom.x, self.positionToAnimateTo.x, t)
+					self.pos.y = self.lerp(self.positionToAnimateFrom.y, self.positionToAnimateTo.y, t)
+					inProperPosition = false
+				end
+			end
+			
+			if self.animateOpacity then
+				if self.color[4] ~= self.opacityToAnimateTo then
+					if self.color[4] < self.opacityToAnimateTo then
+						self.color[4] = min(self.opacityToAnimateTo, self.color[4] + (self.opacityAnimateSpeed * dt))
+					else
+						self.color[4] = max(self.opacityToAnimateTo, self.color[4] - (self.opacityAnimateSpeed * dt))
+					end
+					atProperOpacity = false
+				end
+			end
+			
+			if self.animateBorderColor then
+				for k,v in ipairs(self.borderColorToAnimateTo) do
+					if self.borderColor[k] ~= v then
+						if v > self.borderColor[k] then
+							self.borderColor[k] = min(v, self.borderColor[k] + (self.borderColorAnimateSpeed * dt))
+						else
+							self.borderColor[k] = max(v, self.borderColor[k] - (self.borderColorAnimateSpeed * dt))
+						end
+						allBorderColorsMatch = false
+					end
+				end
+			end
+			
+			if allColorsMatch and inProperPosition and atProperOpacity and allBorderColorsMatch then
+				self.inAnimation = false
+				self.animateColor = false
+				self.animatePosition = false
+				if self.animateOpacity and self.faded then self.hidden = true end
+				self.animateOpacity = false
+			end
+		end
 	end
+	
+	function t:setOpacity(o)
+		assert(o, "FAILURE: text:setUseBorder() :: Missing param[opacity]")
+		assert(type(o) == "number", "FAILURE: text:setUseBorder() :: Incorrect param[opacity] - expecting number and got " .. type(o))
+		self.color[4] = o
+	end
+	
+	function t:getOpacity()
+		return self.color[4]
+	end
+	
+	function t:typewriterCycle()
+		self.typewriterWaited = 0
+		self.typewriterPos = 1
+		self.typewriterPrint = ""
+		self.typewriterFinished = false
+		self.typewriterStopped = false
+		self.typewriterPaused = false
+	end
+	
+	function t:setText(txt)
+		assert(txt ~= nil, "FAILURE: text:setText() :: Missing param[text]")
+		assert(type(txt) == "string", "FAILURE: text:setText() :: Incorrect param[text] - expecting boolean and got " .. type(txt))
+		self.text = text
+		self.typewriterText, self.fancy = text:split(txt)
+	end
+	
+	function t:getText()
+		return self.text
+	end
+	
+	function t:setAsTypewriter(aT)
+		assert(aT ~= nil, "FAILURE: text:setAsTypewriter() :: Missing param[useBorder]")
+		assert(type(aT) == "boolean", "FAILURE: text:setAsTypewriter() :: Incorrect param[useBorder] - expecting boolean and got " .. type(aT))
+		self.typewriter = aT
+	end
+	
+	function t:isTypewriter()
+		return self.typewriter
+	end
+	
+	function t:setX(x)
+		assert(x, "FAILURE: text:setX() :: Missing param[x]")
+		assert(type(x) == "number", "FAILURE: text:setX() :: Incorrect param[x] - expecting number and got " .. type(x))
+		self.pos.x = x
+	end
+	
+	function t:getX()
+		return self.pos.x
+	end
+	
+	function t:setY(y)
+		assert(y, "FAILURE: text:setY() :: Missing param[y]")
+		assert(type(y) == "number", "FAILURE: text:setY() :: Incorrect param[y] - expecting number and got " .. type(y))
+		self.pos.y = y
+	end
+	
+	function t:getY()
+		return self.pos.y
+	end
+	
+	function t:setZ(z)
+		assert(z, "FAILURE: text:setZ() :: Missing param[z]")
+		assert(type(z) == "number", "FAILURE: text:setZ() :: Incorrect param[z] - expecting number and got " .. type(z))
+		self.pos.z = z
+	end
+	
+	function t:getZ()
+		return self.pos.z
+	end
+	
+	function t.lerp(e,s,c)
+		return (1 - c) * e + c * s
+	end
+	
+	return t
 end
 
-function typewriter:update(dt)
-	for _,t in ipairs(self.typewriters) do if t.show and t:isPlaying() then t:update(dt) end end
+function text:split(s)
+	local t={}
+	local f = false
+	if string.match(s, "{") then
+		f = true
+		for b in string.gmatch(str, ".-{") do
+			local id = #t + 1
+			t[id] = {}
+			t[id].text = {}
+			t[id].color = "white"
+			t[id].delay = 0
+			t[id].delayWaited = 0
+			t[id].needToWait = false
+			t[id].font = "default"
+			t[id].time = 0.5
+			t[id].started = false
+			t[id].finished = false
+			t[id].textPos = 0
+			t[id].timeWaited = 0
+			t[id].toShow = ""
+			if string.match(b, "}") then
+				for o in string.gmatch(b, ".-}") do
+					local d = o:gsub("}","")
+					for m in string.gmatch(d, "([^,]+)") do
+						if string.sub(m,1,1) == prefixes.color then
+							t[id].color = m:gsub("^" .. prefixes.color .. "=", "")
+						end
+						if string.sub(m,1,1) == prefixes.delay then
+							t[id].delay = m:gsub("^" .. prefixes.delay .. "=", "")
+							t[id].needToWait = true
+						end
+						if string.sub(m,1,1) == prefixes.font then
+							t[id].font = m:gsub("^" .. prefixes.font .. "=", "")
+						end
+						if string.sub(m,1,1) == prefixes.time then
+							t[id].time = m:gsub("^" .. prefixes.time .. "=", "")
+						end
+					end
+				end
+				t[id].fullText = b:gsub("^.-}",""):gsub("{",""):gsub("^%s*(.-)%s*$","%1")
+				for i in t[id].fullText:gmatch(".") do
+					t[id].text[#t[id].text + 1] = i
+				end
+			else
+				t[id] = { text = b:gsub("{", "")}
+			end
+		end
+	else
+		for i in string.gmatch(s, ".") do
+			t[#t+1] = i
+		end
+	end
+	return t, f
 end
 
-function typewriter:draw()
-	for _,t in ipairs(self.typewriters) do if t.show and t:isPlaying() then t:draw() end end
-end
-
-return typewriter
+return text
